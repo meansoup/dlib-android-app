@@ -45,6 +45,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.support.v4.app.ActivityCompat;
+import android.util.Log;
 import android.util.Size;
 import android.util.SparseArray;
 import android.util.SparseIntArray;
@@ -62,6 +63,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+
 
 import hugo.weaving.DebugLog;
 import timber.log.Timber;
@@ -94,27 +96,32 @@ public class CameraConnectionFragment extends Fragment {
      * {@link android.view.TextureView.SurfaceTextureListener} handles several lifecycle events on a
      * {@link TextureView}.
      */
+    /*
+        surfaceTexture은 이미지 스트림을 가져온다. 여기서 이미지 스트림은 보통 카메라, 비디오를 의미함.
+        기존의 뷰에서 작동하며 translate, alpha, animated가 가능하다.
+     */
     private final TextureView.SurfaceTextureListener surfaceTextureListener =
             new TextureView.SurfaceTextureListener() {
                 @Override
-                public void onSurfaceTextureAvailable(
-                        final SurfaceTexture texture, final int width, final int height) {
+                public void onSurfaceTextureAvailable(//textureview에서 surfacetexture 사용 준비가 됨.
+                                                      final SurfaceTexture texture, final int width, final int height) {
                     openCamera(width, height);
                 }
 
                 @Override
-                public void onSurfaceTextureSizeChanged(
-                        final SurfaceTexture texture, final int width, final int height) {
+                public void onSurfaceTextureSizeChanged(//surfacetexture의 buffer size가 바뀌었을 때
+                                                        final SurfaceTexture texture, final int width, final int height) {
                     configureTransform(width, height);
                 }
 
                 @Override
-                public boolean onSurfaceTextureDestroyed(final SurfaceTexture texture) {
+                public boolean onSurfaceTextureDestroyed(final SurfaceTexture texture) {//surfacetexture가 destory 되었을 때
                     return true;
                 }
 
                 @Override
                 public void onSurfaceTextureUpdated(final SurfaceTexture texture) {
+                    //surfacetexture가 updatetexImage를 통해 update 될 때, 즉 하나하나의 frame 마다
                 }
             };
 
@@ -286,13 +293,13 @@ public class CameraConnectionFragment extends Fragment {
     @Override
     public View onCreateView(
             final LayoutInflater inflater, final ViewGroup container, final Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.camera_connection_fragment, container, false);
+        return inflater.inflate(R.layout.camera_connection_fragment, container, false); //레이아웃 연결
     }
 
     @Override
     public void onViewCreated(final View view, final Bundle savedInstanceState) {
         textureView = (AutoFitTextureView) view.findViewById(R.id.texture);
-        mScoreView = (TrasparentTitleView) view.findViewById(R.id.results);
+        mScoreView = (TrasparentTitleView) view.findViewById(R.id.results); //레이아웃 context들 아이디 받아옴
     }
 
     @Override
@@ -304,13 +311,14 @@ public class CameraConnectionFragment extends Fragment {
     public void onResume() {
         super.onResume();
         startBackgroundThread();
-
+        Log.d("resume", "onnn!");
         // When the screen is turned off and turned back on, the SurfaceTexture is already
         // available, and "onSurfaceTextureAvailable" will not be called. In that case, we can open
         // a camera and start preview from here (otherwise, we wait until the surface is ready in
         // the SurfaceTextureListener).
         if (textureView.isAvailable()) {
             openCamera(textureView.getWidth(), textureView.getHeight());
+            Log.d("111", "opencamera");
         } else {
             textureView.setSurfaceTextureListener(surfaceTextureListener);
         }
@@ -337,68 +345,74 @@ public class CameraConnectionFragment extends Fragment {
         try {
             SparseArray<Integer> cameraFaceTypeMap = new SparseArray<>();
             // Check the facing types of camera devices
-            for (final String cameraId : manager.getCameraIdList()) {
-                final CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraId);
-                final Integer facing = characteristics.get(CameraCharacteristics.LENS_FACING);
-                if (facing != null && facing == CameraCharacteristics.LENS_FACING_FRONT) {
-                    if (cameraFaceTypeMap.get(CameraCharacteristics.LENS_FACING_FRONT) != null) {
-                        cameraFaceTypeMap.append(CameraCharacteristics.LENS_FACING_FRONT, cameraFaceTypeMap.get(CameraCharacteristics.LENS_FACING_FRONT) + 1);
-                    } else {
-                        cameraFaceTypeMap.append(CameraCharacteristics.LENS_FACING_FRONT, 1);
-                    }
-                }
+//            for (final String cameraId : manager.getCameraIdList()) {
 
-                if (facing != null && facing == CameraCharacteristics.LENS_FACING_BACK) {
-                    if (cameraFaceTypeMap.get(CameraCharacteristics.LENS_FACING_FRONT) != null) {
-                        cameraFaceTypeMap.append(CameraCharacteristics.LENS_FACING_BACK, cameraFaceTypeMap.get(CameraCharacteristics.LENS_FACING_BACK) + 1);
-                    } else {
-                        cameraFaceTypeMap.append(CameraCharacteristics.LENS_FACING_BACK, 1);
-                    }
-                }
-            }
+            final String cameraId = manager.getCameraIdList()[1];   // 배열 값이 0일 경우 후면, 1일 경우 전면(셀카)
+//                Log.d("list ", manager.getCameraIdList().toString());
+//                Log.d("count ", manager.getCameraIdList().length+"");
 
-            Integer num_facing_back_camera = cameraFaceTypeMap.get(CameraCharacteristics.LENS_FACING_BACK);
-            for (final String cameraId : manager.getCameraIdList()) {
-                final CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraId);
-                final Integer facing = characteristics.get(CameraCharacteristics.LENS_FACING);
-                // If facing back camera or facing external camera exist, we won't use facing front camera
-                if (num_facing_back_camera != null && num_facing_back_camera > 0) {
-                    // We don't use a front facing camera in this sample if there are other camera device facing types
-                    if (facing != null && facing == CameraCharacteristics.LENS_FACING_FRONT) {
-                        continue;
-                    }
-                }
+            final CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraId);
+            //characteristics.get(CameraCharacteristics.LENS_FACING) == CameraCharacteristics.LENS_FACING_FRONT;
 
-                final StreamConfigurationMap map =
-                        characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
-
-                if (map == null) {
-                    continue;
-                }
-
-                // For still image captures, we use the largest available size.
-                final Size largest =
-                        Collections.max(
-                                Arrays.asList(map.getOutputSizes(ImageFormat.YUV_420_888)),
-                                new CompareSizesByArea());
-
-                // Danger, W.R.! Attempting to use too large a preview size could  exceed the camera
-                // bus' bandwidth limitation, resulting in gorgeous previews but the storage of
-                // garbage capture data.
-                previewSize =
-                        chooseOptimalSize(map.getOutputSizes(SurfaceTexture.class), width, height, largest);
-
-                // We fit the aspect ratio of TextureView to the size of preview we picked.
-                final int orientation = getResources().getConfiguration().orientation;
-                if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                    textureView.setAspectRatio(previewSize.getWidth(), previewSize.getHeight());
+            final Integer facing = characteristics.get(CameraCharacteristics.LENS_FACING);
+            if (facing != null && facing == CameraCharacteristics.LENS_FACING_FRONT) {
+                if (cameraFaceTypeMap.get(CameraCharacteristics.LENS_FACING_FRONT) != null) {
+                    cameraFaceTypeMap.append(CameraCharacteristics.LENS_FACING_FRONT, cameraFaceTypeMap.get(CameraCharacteristics.LENS_FACING_FRONT) + 1);
                 } else {
-                    textureView.setAspectRatio(previewSize.getHeight(), previewSize.getWidth());
+                    cameraFaceTypeMap.append(CameraCharacteristics.LENS_FACING_FRONT, 1);
                 }
-
-                CameraConnectionFragment.this.cameraId = cameraId;
-                return;
             }
+//                if (facing != null && facing == CameraCharacteristics.LENS_FACING_BACK) {
+//                    if (cameraFaceTypeMap.get(CameraCharacteristics.LENS_FACING_FRONT) != null) {
+//                        cameraFaceTypeMap.append(CameraCharacteristics.LENS_FACING_BACK, cameraFaceTypeMap.get(CameraCharacteristics.LENS_FACING_BACK) + 1);
+//                    } else {
+//                        cameraFaceTypeMap.append(CameraCharacteristics.LENS_FACING_BACK, 1);
+//                    }
+//                }
+//            }
+
+            Integer num_facing_back_camera = cameraFaceTypeMap.get(CameraCharacteristics.LENS_FACING_FRONT); //******** 고친부분
+//            for (final String cameraId : manager.getCameraIdList()[) {
+//                final CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraId);
+//                final Integer facing = characteristics.get(CameraCharacteristics.LENS_FACING);
+            // If facing back camera or facing external camera exist, we won't use facing front camera
+            if (num_facing_back_camera != null && num_facing_back_camera > 0) {
+                // We don't use a front facing camera in this sample if there are other camera device facing types
+                if (facing != null && facing == CameraCharacteristics.LENS_FACING_BACK) { //******** 고친부분
+//                        continue;
+                }
+            }
+
+            final StreamConfigurationMap map =
+                    characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
+
+            if (map == null) {
+//                    continue;
+            }
+
+            // For still image captures, we use the largest available size.
+            final Size largest =
+                    Collections.max(
+                            Arrays.asList(map.getOutputSizes(ImageFormat.YUV_420_888)),
+                            new CompareSizesByArea());
+
+            // Danger, W.R.! Attempting to use too large a preview size could  exceed the camera
+            // bus' bandwidth limitation, resulting in gorgeous previews but the storage of
+            // garbage capture data.
+            previewSize =
+                    chooseOptimalSize(map.getOutputSizes(SurfaceTexture.class), width, height, largest);
+
+            // We fit the aspect ratio of TextureView to the size of preview we picked.
+            final int orientation = getResources().getConfiguration().orientation;
+            if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                textureView.setAspectRatio(previewSize.getWidth(), previewSize.getHeight());
+            } else {
+                textureView.setAspectRatio(previewSize.getHeight(), previewSize.getWidth());
+            }
+
+            CameraConnectionFragment.this.cameraId = cameraId;
+            return;
+//            }
         } catch (final CameraAccessException e) {
             Timber.tag(TAG).e("Exception!", e);
         } catch (final NullPointerException e) {
@@ -541,6 +555,10 @@ public class CameraConnectionFragment extends Fragment {
             Timber.tag(TAG).i("Opening camera preview: " + previewSize.getWidth() + "x" + previewSize.getHeight());
 
             // Create the reader for the preview frames.
+//            previewReader =
+//                    ImageReader.newInstance(
+//                            previewSize.getWidth(), previewSize.getHeight(), ImageFormat.YUV_420_888, 2);
+
             previewReader =
                     ImageReader.newInstance(
                             previewSize.getWidth(), previewSize.getHeight(), ImageFormat.YUV_420_888, 2);
@@ -642,6 +660,7 @@ public class CameraConnectionFragment extends Fragment {
 
     /**
      * Shows an error message dialog.
+     * API 버전을 지원하지 않는 경우.
      */
     public static class ErrorDialog extends DialogFragment {
         private static final String ARG_MESSAGE = "message";
