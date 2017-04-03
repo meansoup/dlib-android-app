@@ -134,11 +134,11 @@ public class OnGetImageListener implements OnImageAvailableListener {
         matrix.postScale(scaleFactor, scaleFactor);
 
         // Rotate around the center if necessary.
-        if (mScreenRotation != 0) {
-            matrix.postTranslate(-dst.getWidth() / 2.0f, -dst.getHeight() / 2.0f);
-            matrix.postRotate(mScreenRotation);
-            matrix.postTranslate(dst.getWidth() / 2.0f, dst.getHeight() / 2.0f);
-        }
+//        if (mScreenRotation != 0) {
+//            matrix.postTranslate(-dst.getWidth() / 2.0f, -dst.getHeight() / 2.0f);
+//            matrix.postRotate(mScreenRotation);
+//            matrix.postTranslate(dst.getWidth() / 2.0f, dst.getHeight() / 2.0f);
+//        }
 
         final Canvas canvas = new Canvas(dst);
         canvas.drawBitmap(src, matrix, null);
@@ -146,6 +146,10 @@ public class OnGetImageListener implements OnImageAvailableListener {
 
     @Override
     public void onImageAvailable(final ImageReader reader) {
+        /*
+        이함수가 초기화할때 처음에 한번 실행된다. CameraConnectionFragment에서 setOnImageAvailableListener 함수를 통해서 진행된다.
+        여기서 run 에서 facedet을 하고, handler에서 이게 실행된다.
+         */
         Image image = null;
         try {
             image = reader.acquireLatestImage();

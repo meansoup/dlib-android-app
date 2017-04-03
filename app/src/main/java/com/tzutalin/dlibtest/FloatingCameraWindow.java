@@ -74,11 +74,16 @@ public class FloatingCameraWindow {
             mScreenMaxHeight = display.getHeight();
         }
         // Default window size
-        mWindowWidth = mScreenMaxWidth / 2;
-        mWindowHeight = mScreenMaxHeight / 2;
+        mWindowWidth = mScreenMaxWidth;// / 2;
+        mWindowHeight = mScreenMaxHeight;// / 2;
+
+        Log.d("size_B", "===========\n==============\n===========\n==========" + mWindowHeight + "///////" + mWindowWidth + "=========\n========\n========\n");
 
         mWindowWidth = mWindowWidth > 0 && mWindowWidth < mScreenMaxWidth ? mWindowWidth : mScreenMaxWidth;
         mWindowHeight = mWindowHeight > 0 && mWindowHeight < mScreenMaxHeight ? mWindowHeight : mScreenMaxHeight;
+
+        Log.d("size_A", "===========\n==============\n===========\n==========" + mWindowHeight + "///////" + mWindowWidth + "=========\n========\n========\n");
+
     }
 
     public FloatingCameraWindow(Context context, int windowWidth, int windowHeight) {
@@ -220,6 +225,10 @@ public class FloatingCameraWindow {
             int colorMaxWidth = (int) (mWindowWidth* window.mScaleWidthRatio);
             int colorMaxHeight = (int) (mWindowHeight * window.mScaleHeightRatio);
 
+            Log.d("=======color", "===========\n==============\n===========\n==========" + colorMaxHeight + "///////" + colorMaxWidth + "=========\n========\n========\n");
+
+
+
             mColorView.getLayoutParams().width = colorMaxWidth;
             mColorView.getLayoutParams().height = colorMaxHeight;
         }
@@ -227,37 +236,37 @@ public class FloatingCameraWindow {
         @Override
         public boolean onTouchEvent(MotionEvent event) {
             switch (event.getAction()) {
-                case MotionEvent.ACTION_DOWN:
-                    mLastX = (int) event.getRawX();
-                    mLastY = (int) event.getRawY();
-                    mFirstX = mLastX;
-                    mFirstY = mLastY;
-                    break;
-                case MotionEvent.ACTION_MOVE:
-                    int deltaX = (int) event.getRawX() - mLastX;
-                    int deltaY = (int) event.getRawY() - mLastY;
-                    mLastX = (int) event.getRawX();
-                    mLastY = (int) event.getRawY();
-                    int totalDeltaX = mLastX - mFirstX;
-                    int totalDeltaY = mLastY - mFirstY;
-
-                    if (mIsMoving
-                            || Math.abs(totalDeltaX) >= MOVE_THRESHOLD
-                            || Math.abs(totalDeltaY) >= MOVE_THRESHOLD) {
-                        mIsMoving = true;
-                        WindowManager windowMgr = mWeakRef.get().mWindowManager;
-                        WindowManager.LayoutParams parm = mWeakRef.get().mWindowParam;
-                        if (event.getPointerCount() == 1 && windowMgr != null) {
-                            parm.x -= deltaX;
-                            parm.y -= deltaY;
-                            windowMgr.updateViewLayout(this, parm);
-                        }
-                    }
-                    break;
-
-                case MotionEvent.ACTION_UP:
-                    mIsMoving = false;
-                    break;
+//                case MotionEvent.ACTION_DOWN:
+//                    mLastX = (int) event.getRawX();
+//                    mLastY = (int) event.getRawY();
+//                    mFirstX = mLastX;
+//                    mFirstY = mLastY;
+//                    break;
+//                case MotionEvent.ACTION_MOVE:
+//                    int deltaX = (int) event.getRawX() - mLastX;
+//                    int deltaY = (int) event.getRawY() - mLastY;
+//                    mLastX = (int) event.getRawX();
+//                    mLastY = (int) event.getRawY();
+//                    int totalDeltaX = mLastX - mFirstX;
+//                    int totalDeltaY = mLastY - mFirstY;
+//
+//                    if (mIsMoving
+//                            || Math.abs(totalDeltaX) >= MOVE_THRESHOLD
+//                            || Math.abs(totalDeltaY) >= MOVE_THRESHOLD) {
+//                        mIsMoving = true;
+//                        WindowManager windowMgr = mWeakRef.get().mWindowManager;
+//                        WindowManager.LayoutParams parm = mWeakRef.get().mWindowParam;
+//                        if (event.getPointerCount() == 1 && windowMgr != null) {
+//                            parm.x -= deltaX;
+//                            parm.y -= deltaY;
+//                            windowMgr.updateViewLayout(this, parm);
+//                        }
+//                    }
+//                    break;
+//
+//                case MotionEvent.ACTION_UP:
+//                    mIsMoving = false;
+//                    break;
             }
             return true;
         }

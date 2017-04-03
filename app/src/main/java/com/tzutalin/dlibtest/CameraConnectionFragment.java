@@ -157,7 +157,7 @@ public class CameraConnectionFragment extends Fragment {
     private final CameraDevice.StateCallback stateCallback =
             new CameraDevice.StateCallback() {
                 @Override
-                public void onOpened(final CameraDevice cd) {
+                public void onOpened(final CameraDevice cd) {//여기서 cameraPreviewsession만 주석처리해도 아무 카메라도 뜨지않음
                     // This method is called when the camera is opened.  We start camera preview here.
                     cameraOpenCloseLock.release();
                     cameraDevice = cd;
@@ -291,13 +291,14 @@ public class CameraConnectionFragment extends Fragment {
     }
 
     @Override
-    public View onCreateView(
+    public View onCreateView(//뷰 계층이랑 fragment 연관성을 create, return
             final LayoutInflater inflater, final ViewGroup container, final Bundle savedInstanceState) {
         return inflater.inflate(R.layout.camera_connection_fragment, container, false); //레이아웃 연결
     }
 
     @Override
     public void onViewCreated(final View view, final Bundle savedInstanceState) {
+        //oncreateview 이후에 바로 실행,
         textureView = (AutoFitTextureView) view.findViewById(R.id.texture);
         mScoreView = (TrasparentTitleView) view.findViewById(R.id.results); //레이아웃 context들 아이디 받아옴
     }
@@ -308,7 +309,7 @@ public class CameraConnectionFragment extends Fragment {
     }
 
     @Override
-    public void onResume() {
+    public void onResume() {//fragment가 사용자에게 보이고, 활성화되어 돌아갈때 호출됨
         super.onResume();
         startBackgroundThread();
         Log.d("resume", "onnn!");
@@ -550,15 +551,12 @@ public class CameraConnectionFragment extends Fragment {
 
             // We set up a CaptureRequest.Builder with the output Surface.
             previewRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
-            previewRequestBuilder.addTarget(surface);
+//            얘 주석 해제하면, 큰 카메라가 보인다.
+//            previewRequestBuilder.addTarget(surface);
 
             Timber.tag(TAG).i("Opening camera preview: " + previewSize.getWidth() + "x" + previewSize.getHeight());
 
             // Create the reader for the preview frames.
-//            previewReader =
-//                    ImageReader.newInstance(
-//                            previewSize.getWidth(), previewSize.getHeight(), ImageFormat.YUV_420_888, 2);
-
             previewReader =
                     ImageReader.newInstance(
                             previewSize.getWidth(), previewSize.getHeight(), ImageFormat.YUV_420_888, 2);
