@@ -9,7 +9,8 @@ See [dlib-android](https://github.com/tzutalin/dlib-android) for JNI lib. Refer 
 
 ###Grap the source
 
-`$ git clone https://github.com/tzutalin/dlib-android-app.git`
+different with `$ git clone https://github.com/tzutalin/dlib-android-app.git`
+`$ git clone git@github.com:meansoup/dlib-android-app.git`
 
 ### Features
 
